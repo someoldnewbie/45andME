@@ -190,7 +190,7 @@
       progressEl.textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
       scoreEl.textContent = `Score: ${score}`;
       questionEl.textContent = question.prompt;
-      answersEl.innerHTML = "";
+      answersEl.replaceChildren();
 
       question.answers.forEach((answer) => {
         const button = document.createElement("button");
