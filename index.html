@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>45andME</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #e3f6ff 0%, #fdfdf2 100%);
+      color: #16324f;
+    }
+
+    main {
+      width: min(90vw, 42rem);
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1rem;
+      box-shadow: 0 1rem 2rem rgba(22, 50, 79, 0.15);
+      padding: 2rem;
+    }
+
+    h1,
+    p {
+      margin-top: 0;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      font-weight: bold;
+    }
+
+    .answers {
+      display: grid;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 0.9rem 1.2rem;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .answer {
+      background: #dff3ff;
+      color: #16324f;
+      text-align: left;
+    }
+
+    .answer:hover,
+    .answer:focus-visible,
+    .primary:hover,
+    .primary:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 0.5rem 1rem rgba(22, 50, 79, 0.12);
+    }
+
+    .primary {
+      background: #0077b6;
+      color: #fff;
+    }
+
+    #result {
+      background: #f4fbff;
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>45andME</h1>
+    <p>Answer a few questions to discover how your imaginary golf DNA stacks up today.</p>
+
+    <section id="game">
+      <div class="meta">
+        <span id="progress" aria-live="polite"></span>
+        <span id="score" aria-live="polite">Score: 0</span>
+      </div>
+
+      <h2 id="question"></h2>
+      <div id="answers" class="answers"></div>
+    </section>
+
+    <section id="result" class="hidden" aria-live="polite">
+      <h2 id="result-title"></h2>
+      <p id="result-copy"></p>
+      <button id="restart" class="primary" type="button">Play again</button>
+    </section>
+  </main>
+
+  <script>
+    const questions = [
+      {
+        prompt: "Your tee shot finds the rough. What does your golf DNA tell you to do?",
+        answers: [
+          { text: "Punch back to the fairway and stay patient.", points: 3 },
+          { text: "Try a heroic shot through the trees.", points: 1 },
+          { text: "Invent a new club grip on the spot.", points: 0 }
+        ]
+      },
+      {
+        prompt: "Which snack powers your back nine?",
+        answers: [
+          { text: "Banana and water.", points: 3 },
+          { text: "Trail mix and confidence.", points: 2 },
+          { text: "A mysterious hot dog at the turn.", points: 1 }
+        ]
+      },
+      {
+        prompt: "A friend asks about your pre-shot routine. You say:",
+        answers: [
+          { text: "Same steps every time.", points: 3 },
+          { text: "I trust the vibes.", points: 2 },
+          { text: "Routine? I prefer chaos.", points: 0 }
+        ]
+      },
+      {
+        prompt: "You face a five-foot putt to save par. What's the move?",
+        answers: [
+          { text: "Commit to the line and roll it smooth.", points: 3 },
+          { text: "Hit it firm and hope.", points: 1 },
+          { text: "Ask if gimmes apply to genetics.", points: 0 }
+        ]
+      },
+      {
+        prompt: "What's the best description of your golfing superpower?",
+        answers: [
+          { text: "Consistency.", points: 3 },
+          { text: "Recovery shots.", points: 2 },
+          { text: "Storytelling after the round.", points: 1 }
+        ]
+      }
+    ];
+
+    const progressEl = document.getElementById("progress");
+    const scoreEl = document.getElementById("score");
+    const questionEl = document.getElementById("question");
+    const answersEl = document.getElementById("answers");
+    const gameEl = document.getElementById("game");
+    const resultEl = document.getElementById("result");
+    const resultTitleEl = document.getElementById("result-title");
+    const resultCopyEl = document.getElementById("result-copy");
+    const restartButton = document.getElementById("restart");
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    function getResult(total) {
+      if (total >= 13) {
+        return {
+          title: "Champion Chromosomes",
+          copy: "Your golf DNA is built for smooth swings, sensible choices, and bragging rights at the clubhouse."
+        };
+      }
+
+      if (total >= 8) {
+        return {
+          title: "Weekend Warrior Genes",
+          copy: "You have enough golf DNA to stay competitive, with just enough chaos to keep the round entertaining."
+        };
+      }
+
+      return {
+        title: "Experimental Fairway Scientist",
+        copy: "Your golf DNA favors bold experiments. The scorecard may wobble, but the stories will be elite."
+      };
+    }
+
+    function renderQuestion() {
+      const question = questions[currentQuestion];
+      progressEl.textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+      scoreEl.textContent = `Score: ${score}`;
+      questionEl.textContent = question.prompt;
+      answersEl.innerHTML = "";
+
+      question.answers.forEach((answer) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "answer";
+        button.textContent = answer.text;
+        button.addEventListener("click", () => chooseAnswer(answer.points));
+        answersEl.appendChild(button);
+      });
+    }
+
+    function chooseAnswer(points) {
+      score += points;
+      currentQuestion += 1;
+
+      if (currentQuestion < questions.length) {
+        renderQuestion();
+        return;
+      }
+
+      const result = getResult(score);
+      scoreEl.textContent = `Score: ${score}`;
+      resultTitleEl.textContent = result.title;
+      resultCopyEl.textContent = result.copy;
+      gameEl.classList.add("hidden");
+      resultEl.classList.remove("hidden");
+    }
+
+    function restartGame() {
+      currentQuestion = 0;
+      score = 0;
+      resultEl.classList.add("hidden");
+      gameEl.classList.remove("hidden");
+      renderQuestion();
+    }
+
+    restartButton.addEventListener("click", restartGame);
+    renderQuestion();
+  </script>
+</body>
+</html>
